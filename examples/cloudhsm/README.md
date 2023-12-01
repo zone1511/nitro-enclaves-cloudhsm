@@ -1,6 +1,6 @@
 # nitro-enalcave-cloudhsm example
 
-## adjust code according to your environment
+## Adjust code according to your environment
 
 Change secrets manager secret name in file(cloudhsm-enclave/src/main/java/com/github/qyzhangaws/cloudhsm/handler/CloudHSMHandler.java)
 
@@ -8,6 +8,8 @@ Change secrets manager secret name in file(cloudhsm-enclave/src/main/java/com/gi
 static String CLOUDHSM_SECRET_NAME = "cloudhsm/cluster-teeultuftgy";
 static Region REGION = Region.of("ap-southeast-1");
 ```
+
+Replace the placeholder file examples/cloudhsm/cloudhsm-enclave/customerCA.crt with your CloudHSM cluster customerCA.crt
 
 ## Build Jars
 
@@ -39,7 +41,7 @@ nitro-cli terminate-enclave --all
 nitro-cli run-enclave --eif-path cloudhsm-enclave.eif --memory 6144 --cpu-count 4 --enclave-cid 5 --debug-mode
 ```
 
-### debug-mode Console
+### Debug-mode Console
 
 ```bash
 nitro-cli console --enclave-id $(nitro-cli describe-enclaves | jq -r '.[0].EnclaveID')
