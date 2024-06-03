@@ -32,7 +32,7 @@ env HSM_IP=$HSM_IP
 RUN wget https://s3.amazonaws.com/cloudhsmv2-software/CloudHsmClient/EL7/cloudhsm-jce-latest.el7.x86_64.rpm
 RUN rpm -ivh cloudhsm-jce-latest.el7.x86_64.rpm
 COPY customerCA.crt /opt/cloudhsm/etc/
-RUN /opt/cloudhsm/bin/configure-jce -a $HSM_IP
+RUN /opt/cloudhsm/bin/configure-jce -a $HSM_IP --disable-key-availability-check
 
 # copy jars and scripts
 COPY target/nitro-enclaves-cloudhsm-enclave-1.0.0-SNAPSHOT.jar ./app.jar
