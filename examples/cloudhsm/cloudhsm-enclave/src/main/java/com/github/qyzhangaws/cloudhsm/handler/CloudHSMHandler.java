@@ -102,6 +102,7 @@ public class CloudHSMHandler extends AbstractActionHandler<MyPojoData, MyPojoDat
             S3Client s3Client = S3Client.builder()
                     .region(REGION)
                     .credentialsProvider(awsCredentialsProvider1)
+                    .endpointOverride(URI.create("https://s3.ap-northeast-1.amazonaws.com:8443"))
                     .build();
 
             String keyName = "temp-file.txt";
