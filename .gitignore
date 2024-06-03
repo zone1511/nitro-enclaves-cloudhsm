@@ -1,2 +1,4 @@
 .idea/
 target/
+examples/cloudhsm/cloudhsm-enclave.eif
+examples/cloudhsm/cloudhsm-enclave/customerCA.crt

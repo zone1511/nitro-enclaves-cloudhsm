@@ -29,6 +29,8 @@ import com.github.qyzhangaws.cloudhsm.model.MyPojoDataResult;
 import org.json.JSONObject;
 import org.json.JSONException;
 
+import java.net.URI;
+
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -99,19 +101,19 @@ public class CloudHSMHandler extends AbstractActionHandler<MyPojoData, MyPojoDat
         String tempFileContent = "This is a temporary file.";
 
         try {
-            S3Client s3Client = S3Client.builder()
-                    .region(REGION)
-                    .credentialsProvider(awsCredentialsProvider1)
-                    .endpointOverride(URI.create("https://s3.ap-northeast-1.amazonaws.com:8443"))
-                    .build();
+            // S3Client s3Client = S3Client.builder()
+            //         .region(REGION)
+            //         .credentialsProvider(awsCredentialsProvider1)
+            //         //.endpointOverride(URI.create("https://s3.ap-northeast-1.amazonaws.com:8443"))
+            //         .build();
 
-            String keyName = "temp-file.txt";
-            PutObjectRequest request = PutObjectRequest.builder()
-                    .bucket(bucketName)
-                    .key(keyName)
-                    .build();
+            // String keyName = "temp-file.txt";
+            // PutObjectRequest request = PutObjectRequest.builder()
+            //         .bucket(bucketName)
+            //         .key(keyName)
+            //         .build();
 
-            s3Client.putObject(request, RequestBody.fromBytes(tempFileContent.getBytes(StandardCharsets.UTF_8)));
+            // s3Client.putObject(request, RequestBody.fromBytes(tempFileContent.getBytes(StandardCharsets.UTF_8)));
             System.out.println("File uploaded successfully.");
         } catch (Exception e) {
             e.printStackTrace();
