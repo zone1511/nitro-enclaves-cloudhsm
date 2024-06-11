@@ -14,6 +14,14 @@ import software.amazon.awssdk.services.secretsmanager.SecretsManagerClient;
 import software.amazon.awssdk.services.secretsmanager.model.GetSecretValueRequest;
 import software.amazon.awssdk.services.secretsmanager.model.GetSecretValueResponse;
 
+import software.amazon.awssdk.http.apache.ApacheHttpClient;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
+import java.security.cert.X509Certificate;
+import java.time.Duration;
+
+
 import com.amazonaws.cloudhsm.jce.provider.CloudHsmProvider;
 import com.amazonaws.cloudhsm.jce.provider.KeyStoreWithAttributes;
 import com.amazonaws.cloudhsm.jce.provider.attributes.KeyAttribute;
@@ -44,6 +52,11 @@ import java.security.Security;
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 
+
+import java.io.*;
+import java.io.IOException;
+import java.io.InputStreamReader;
+
 @Component
 public class CloudHSMHandler extends AbstractActionHandler<MyPojoData, MyPojoDataResult> {
 
@@ -57,6 +70,38 @@ public class CloudHSMHandler extends AbstractActionHandler<MyPojoData, MyPojoDat
     @Override
     public boolean canHandle(String action) {
         return Actions.CLOUDHSM.name().equalsIgnoreCase(action);
+    }
+    
+    
+    private void writeCredentialFile(JsonNode jsonNode) {
+        String accessKey = jsonNode.get("AK").asText();
+        String secretKey = jsonNode.get("SK").asText();
+        String sessionToken = jsonNode.get("ST").asText();
+
+        String credentialsFilePath = System.getProperty("user.home") + "/.aws/credentials";
+        System.out.println("writing credential file to "+credentialsFilePath);
+        File credentialsFile = new File(credentialsFilePath);
+        try {
+            // Create or append to the credentials file
+            BufferedWriter writer = new BufferedWriter(new FileWriter(credentialsFile, true));
+
+            // Write the credentials to the file
+            writer.write("[default]");
+            writer.newLine();
+            writer.write("aws_access_key_id=" + accessKey);
+            writer.newLine();
+            writer.write("aws_secret_access_key=" + secretKey);
+            writer.newLine();
+            writer.write("aws_session_token=" + sessionToken);
+            writer.newLine();
+
+            writer.close();
+            System.out.println("AWS credentials written to " + credentialsFilePath);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        
+        
     }
 
     @Override
@@ -80,78 +125,9 @@ public class CloudHSMHandler extends AbstractActionHandler<MyPojoData, MyPojoDat
                 jsonNode.get("SK").asText(),
                 jsonNode.get("ST").asText()
         ));
-
-        // set CloudHSM environment variables
-        if (!isCloudHSMEnvVariablesSet()) {
-            setCloudHSMEnvVariables(awsCredentialsProvider1);
-        }
-
-        // add provider
-        try {
-            if (Security.getProvider(CloudHsmProvider.PROVIDER_NAME) == null) {
-                Security.addProvider(new CloudHsmProvider());
-            }
-        } catch (Exception ex) {
-            System.out.println(ex);
-            result.setValue(ex.toString());
-            return result;
-        }
-
-        String bucketName = "kl-enclave-upload";
-        String tempFileContent = "This is a temporary file.";
-
-        try {
-            // S3Client s3Client = S3Client.builder()
-            //         .region(REGION)
-            //         .credentialsProvider(awsCredentialsProvider1)
-            //         //.endpointOverride(URI.create("https://s3.ap-northeast-1.amazonaws.com:8443"))
-            //         .build();
-
-            // String keyName = "temp-file.txt";
-            // PutObjectRequest request = PutObjectRequest.builder()
-            //         .bucket(bucketName)
-            //         .key(keyName)
-            //         .build();
-
-            // s3Client.putObject(request, RequestBody.fromBytes(tempFileContent.getBytes(StandardCharsets.UTF_8)));
-            System.out.println("File uploaded successfully.");
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        String keyMode, keyType, keyLabel;
-        keyMode = keyType = keyLabel = null;
-
-        if (jsonNode.has("KEY_MODE")) {
-            keyMode = jsonNode.get("KEY_MODE").asText().toUpperCase();
-        }
-
-        if (jsonNode.has("KEY_TYPE")) {
-            keyType = jsonNode.get("KEY_TYPE").asText().toUpperCase();
-        }
-
-        if (jsonNode.has("KEY_LABEL")) {
-            keyLabel = jsonNode.get("KEY_LABEL").asText();
-        }
-
-        switch (keyMode) {
-            case "CREATE_KEY": {
-                result.setValue(CreateKey(keyType, keyLabel));
-                break;
-            }
-            case "GET_KEY": {
-                result.setValue(GetKey(keyType, keyLabel));
-                break;
-            }
-            case "DELETE_KEY": {
-                result.setValue(DeleteKey(keyType, keyLabel));
-                break;
-            }
-            default:
-                result.setValue("Error: Invalid KeyMode specified, only support CREATE_KEY, GET_KEY, DELETE_KEY");
-                break;
-        }
-
+        
+        writeCredentialFile(jsonNode);
+        executeCommand("/bin/bash","/app/sign.sh");
         return result;
     }
 
@@ -165,6 +141,28 @@ public class CloudHSMHandler extends AbstractActionHandler<MyPojoData, MyPojoDat
         }
         return true;
     }
+
+    private static void executeCommand(String command,String params) {
+        System.out.println("prepare to execute command.");
+        try {
+            ProcessBuilder processBuilder = new ProcessBuilder();
+            processBuilder.command(command,params);
+
+            Process process = processBuilder.start();
+
+            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+            String line;
+            while ((line = reader.readLine()) != null) {
+                System.out.println(line);
+            }
+
+            int exitCode = process.waitFor();
+            System.out.println("Exit code: " + exitCode);
+        } catch (IOException | InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
 
     // set environment variables for cloudhsm crendentials from Secret Manager
     private void setCloudHSMEnvVariables(AwsCredentialsProvider awsCredentialsProvider) {

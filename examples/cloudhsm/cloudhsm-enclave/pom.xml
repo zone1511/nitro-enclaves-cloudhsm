@@ -12,7 +12,7 @@
 
 	<artifactId>nitro-enclaves-cloudhsm-enclave</artifactId>
 	<properties>
-		<aws.version>2.16.66</aws.version>
+		<aws.version>2.25.64</aws.version>
 	</properties>
 
 	<profiles>
@@ -98,18 +98,24 @@
 		<dependency>
 			<groupId>software.amazon.awssdk</groupId>
 			<artifactId>secretsmanager</artifactId>
-			<version>2.21.15</version>
+			<version>${aws.version}</version>
 		</dependency>
+		
+        <dependency>
+            <groupId>software.amazon.awssdk</groupId>
+            <artifactId>apache-client</artifactId>
+			<version>${aws.version}</version>
+        </dependency>
 
 		<dependency>
 			<groupId>software.amazon.awssdk</groupId>
 			<artifactId>imds</artifactId>
-			<version>2.21.15</version>
+			<version>${aws.version}</version>
 		</dependency>
 		<dependency>
 		    <groupId>software.amazon.awssdk</groupId>
 		    <artifactId>s3</artifactId>
-		    <version>2.25.64</version>
+			<version>${aws.version}</version>
 		</dependency>
 	</dependencies>
 

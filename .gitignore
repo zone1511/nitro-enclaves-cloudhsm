@@ -2,3 +2,7 @@
 target/
 examples/cloudhsm/cloudhsm-enclave.eif
 examples/cloudhsm/cloudhsm-enclave/customerCA.crt
+examples/test
+examples/cloudhsm/cloudhsm-enclave/hsm-keystore.jks
+examples/cloudhsm/cloudhsm-enclave/unsigned.apk
+examples/cloudhsm/cloudhsm-enclave/rotate.jks
